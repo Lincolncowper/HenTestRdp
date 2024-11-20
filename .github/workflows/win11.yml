@@ -1,4 +1,4 @@
-name: Windows 11
+name: Windows 11 RDP Setup
 
 on:
   push:
@@ -39,25 +39,25 @@ jobs:
       - name: Wait for ngrok tunnel to start
         run: |
           echo "Waiting for ngrok to start..."
-          Start-Sleep -Seconds 20  # Menunggu 20 detik agar ngrok siap
+          Start-Sleep -Seconds 60  # Waiting 60 seconds to ensure ngrok is up and running
         timeout-minutes: 5
 
-      - name: Display RDP login info
+      - name: Verify ngrok status and display login info
         run: |
-          echo "=================================="
-          echo "RDP LOGIN DETAILS"
-          echo "=================================="
           $tunnel_info = curl -s http://127.0.0.1:4040/api/tunnels | ConvertFrom-Json
           
           if ($tunnel_info.tunnels -ne $null -and $tunnel_info.tunnels.Count -gt 0) {
             $rdp_url = $tunnel_info.tunnels[0].public_url
             echo "Ngrok Tunnel: $rdp_url"
+            echo "=================================="
+            echo "RDP LOGIN DETAILS"
+            echo "=================================="
+            echo "Username: Administrator"
+            echo "Password: HenCoders"
+            echo "Port: 3389"
+            echo "=================================="
           } else {
             echo "Ngrok tunnel not found. Please check ngrok status."
+            exit 1  # Exit with error if no tunnel found
           }
-
-          echo "Username: Administrator"
-          echo "Password: HenCoders"
-          echo "Port : 3389"
-          echo "=================================="
         timeout-minutes: 5
