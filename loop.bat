@@ -1,17 +1,15 @@
 @echo off
-:: Loop to check ngrok status and restart if necessary
-:loop
-echo Checking ngrok status...
+echo RDP CREATION SUCCESSFUL!
 
-:: Check ngrok status by querying local ngrok API
-curl -s http://127.0.0.1:4040/api/tunnels | findstr "tcp://"
-
-:: If ngrok is not running, restart it
+:check
+tasklist | find /i "ngrok.exe" >nul
 if %errorlevel% neq 0 (
-    echo Ngrok is down. Restarting ngrok...
-    start /b ngrok tcp 3389 --region us
+    echo Unable to get NGROK tunnel. Please check NGROK_AUTH_TOKEN in Settings > Secrets > Repository Secret.
+    echo Maybe your previous VM is still running: https://dashboard.ngrok.com/status/tunnels
+    ping 127.0.0.1 >nul
+    exit
 )
 
-:: Wait for 60 seconds before checking again
-timeout /t 60
-goto loop
+echo Ngrok tunnel is active.
+ping 127.0.0.1 >nul
+goto check
