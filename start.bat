@@ -31,6 +31,7 @@ set NGROK_URL=https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64
 set NGROK_ZIP=ngrok.zip
 set NGROK_EXE=ngrok.exe
 
+:: Unduh ngrok
 curl -L -o %NGROK_ZIP% %NGROK_URL%
 if exist %NGROK_ZIP% (
     tar -xf %NGROK_ZIP% >nul 2>&1 || powershell -Command "Expand-Archive -Force %NGROK_ZIP% ."
@@ -45,14 +46,20 @@ if not exist %NGROK_EXE% (
     exit /b 1
 )
 
-:: Menjalankan ngrok
-start "" "%CD%\ngrok.exe" http 80 >nul 2>&1
+:: Jalankan ngrok
+start "" "%CD%\ngrok.exe" tcp 3389 >ngrok.log 2>&1
 timeout /t 3 >nul
 
-:: Menampilkan status instalasi
-echo Successfully Installed, If the RDP is Dead, Please Rebuild Again!
-echo IP:
-tasklist | find /i "ngrok.exe" >nul && curl -s localhost:4040/api/tunnels | jq -r .tunnels[0].public_url || echo "Cannot get a tunnel, make sure NGROK_AUTH_TOKEN is correct in Settings > Secrets > Repository Secret. Maybe your previous VM is still running: https://dashboard.ngrok.com/status/tunnels"
+:: Periksa ngrok
+tasklist | find /i "ngrok.exe" >nul
+if %errorlevel% equ 0 (
+    for /f "tokens=2 delims=:" %%i in ('curl -s localhost:4040/api/tunnels ^| findstr "tcp://0"') do set TUNNEL=%%i
+    echo IP: tcp://%TUNNEL%
+) else (
+    echo Gagal mendapatkan URL ngrok. Periksa log atau coba lagi.
+)
+
+:: Menampilkan kredensial RDP
 echo Username: administrator
 echo Password: HenCoders2024
 echo Please log in to your RDP!
