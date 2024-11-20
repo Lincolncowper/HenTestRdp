@@ -1,38 +1,19 @@
-name: Windows 11 RDP Setup
+@echo off
+net user Administrator /active:yes
+net user Administrator HEN2024 /add
+net localgroup administrators Administrator /add
+net accounts /minpwlen:1 /maxpwage:unlimited /minpwage:1 /passwordchg:yes
 
-on: workflow_dispatch
+diskperf -Y >nul
+sc config Audiosrv start= auto >nul
+sc start audiosrv >nul
+ICACLS C:\Windows\Temp /grant administrator:F >nul
+ICACLS C:\Windows\installer /grant administrator:F >nul
 
-jobs:
-  build:
-    runs-on: windows-latest
-    timeout-minutes: 9999
-
-    steps:
-    - name: Download necessary files
-      run: |
-        Invoke-WebRequest https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-windows-amd64.zip -OutFile ngrok.zip
-        Invoke-WebRequest https://raw.githubusercontent.com/Lincolncowper/HenTestRdp/refs/heads/main/start.bat -OutFile start.bat
-        Invoke-WebRequest https://raw.githubusercontent.com/Lincolncowper/HenTestRdp/refs/heads/main/loop.bat -OutFile loop.bat
-
-    - name: Extract Ngrok
-      run: Expand-Archive ngrok.zip
-
-    - name: Connect to Ngrok
-      run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
-      env:
-        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
-
-    - name: Enable RDP access
-      run: |
-        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
-        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
-
-    - name: Open Ngrok Tunnel
-      run: Start-Process Powershell -ArgumentList '-Noexit -Command ".\ngrok\ngrok.exe tcp --region ap 3389"'
-
-    - name: Run start.bat to configure the system
-      run: cmd /c start.bat
-
-    - name: Loop until RDP is ready
-      run: cmd /c loop.bat
+echo Successfully Installed, If the RDP is Dead, Please Rebuild Again!
+echo IP:
+tasklist | find /i "ngrok.exe" >Nul && curl -s localhost:4040/api/tunnels | jq -r .tunnels[0].public_url || echo "Cannot get a tunnel, make sure ngrok_auth_token is correct in Settings> Secrets> Repository Secret. Maybe your previous VM is still running: https://dashboard.ngrok.com/status/tunnels "
+echo Username: administrator
+echo Password: HEN2024
+echo Please log in to your RDP!
+ping -n 10 127.0.0.1 >nul
