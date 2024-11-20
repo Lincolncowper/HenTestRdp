@@ -36,7 +36,7 @@ jobs:
           echo "Current directory:"
           dir  # Menampilkan direktori kerja saat ini untuk memastikan start.bat berada di sana
           echo "Checking if start.bat exists..."
-          if (Test-Path -Path '../start.bat') {
+          if (Test-Path -Path '../../start.bat') {
             echo "start.bat exists."
           } else {
             echo "start.bat does not exist in the current directory."
@@ -46,7 +46,7 @@ jobs:
 
       - name: Run start.bat to initialize RDP and ngrok
         run: |
-          cmd.exe /c ../start.bat  # Menjalankan start.bat dari root directory
+          cmd.exe /c ../../start.bat  # Menjalankan start.bat dari root directory
         timeout-minutes: 30
 
       - name: Wait for ngrok tunnel to start
