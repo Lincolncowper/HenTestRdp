@@ -7,12 +7,12 @@ on:
 
 jobs:
   setup-rdp:
-    runs-on: windows-latest  # Gunakan runner Windows yang terbaru
+    runs-on: windows-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-        timeout-minutes: 10  # Timeout untuk checkout repository
+        timeout-minutes: 10
 
       - name: Install ngrok
         run: |
@@ -22,30 +22,35 @@ jobs:
           Move-Item -Path ngrok\ngrok.exe -Destination C:\Windows\System32
           Remove-Item -Path ngrok.zip
           Remove-Item -Path ngrok -Recurse
-        timeout-minutes: 15  # Timeout untuk instalasi ngrok
+        timeout-minutes: 15
 
       - name: Set ngrok auth token from secrets
         env:
-          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}  # Gunakan secret ngrok untuk keamanan
+          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
         run: |
-          echo "Ngrok auth token set successfully"
           ngrok authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
-        timeout-minutes: 5  # Timeout untuk konfigurasi ngrok
+        timeout-minutes: 5
 
-      - name: Run start.bat to setup RDP and ngrok
+      - name: Run start.bat to initialize RDP and ngrok
         run: |
-          echo "Running start.bat to initialize RDP and Ngrok..."
-          cmd.exe /c start.bat  # Memanggil start.bat menggunakan cmd.exe di PowerShell
-        timeout-minutes: 30  # Timeout untuk menjalankan start.bat
+          cmd.exe /c start.bat
+        timeout-minutes: 30
+
+      - name: Wait for ngrok tunnel to start
+        run: |
+          timeout /t 20
+        timeout-minutes: 5
 
       - name: Display RDP login info
         run: |
           echo "=================================="
           echo "RDP LOGIN DETAILS"
           echo "=================================="
-          curl -s http://127.0.0.1:4040/api/tunnels | findstr "tcp://"
+          $tunnel_info = curl -s http://127.0.0.1:4040/api/tunnels | ConvertFrom-Json
+          $rdp_url = $tunnel_info.tunnels[0].public_url
+          echo "Ngrok Tunnel: $rdp_url"
           echo "Username: Administrator"
           echo "Password: HenCoders"
           echo "Port : 3389"
           echo "=================================="
-        timeout-minutes: 5  # Timeout untuk menampilkan informasi RDP
+        timeout-minutes: 5
