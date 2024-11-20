@@ -1,14 +1,14 @@
-const express = require('express');
-const fetch = require('node-fetch');
-const cron = require('node-cron');
-require('dotenv').config();
+import express from 'express';
+import fetch from 'node-fetch';
+import cron from 'node-cron';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Mengatur view engine menggunakan EJS
 app.set('view engine', 'ejs');
-
-// Menampilkan file statis
 app.use(express.static('public'));
 
 // Fungsi untuk memicu workflow
@@ -18,7 +18,7 @@ async function triggerWorkflow() {
   const WORKFLOW_FILE_NAME = process.env.WORKFLOW_FILE_NAME;
 
   const url = `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/${WORKFLOW_FILE_NAME}/dispatches`;
-  
+
   const response = await fetch(url, {
     method: 'POST',
     headers: {
