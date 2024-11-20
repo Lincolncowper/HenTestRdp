@@ -1,62 +1,20 @@
 @echo off
-SET LOGFILE=C:\path\to\logfile.txt
-echo ==================================== > %LOGFILE%
-echo Starting RDP and Ngrok setup... >> %LOGFILE%
-echo ==================================== >> %LOGFILE%
-
-REM Logging Function
-:log
-echo %1 >> %LOGFILE%
-goto :eof
-
-REM Memulai proses setup
-call :log "Initializing RDP setup..."
-
-REM Setup RDP (Contoh pengaturan dasar)
-call :log "Enabling Remote Desktop..."
-reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v fDenyTSConnections /t REG_DWORD /d 0 /f
-call :log "Remote Desktop enabled."
-
-REM Konfigurasi Firewall untuk RDP
-call :log "Configuring firewall for RDP..."
-netsh advfirewall firewall set rule group="Remote Desktop" new enable=Yes
-call :log "Firewall configured."
-
-REM Menyiapkan kredensial (gunakan password default untuk Administrator)
-call :log "Setting up Administrator password..."
-net user Administrator HenCoders
-call :log "Administrator password set."
-
-REM Konfigurasi login tanpa password (opsional, hanya jika diperlukan)
-call :log "Disabling password expiration for Administrator..."
-wmic useraccount where "name='Administrator'" set PasswordExpires=False
-call :log "Password expiration disabled for Administrator."
-
-REM Install dan jalankan ngrok
-call :log "Starting ngrok setup..."
-IF NOT EXIST "C:\Windows\System32\ngrok.exe" (
-    call :log "Ngrok not found. Downloading..."
-    Invoke-WebRequest -Uri https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-windows-amd64.zip -OutFile ngrok.zip
-    Expand-Archive -Path ngrok.zip -DestinationPath ngrok
-    move ngrok\ngrok.exe C:\Windows\System32
-    call :log "Ngrok installed successfully."
-    del ngrok.zip
-) ELSE (
-    call :log "Ngrok already installed."
-)
-
-REM Mengautentikasi ngrok dengan token yang ada
-call :log "Authenticating ngrok..."
-ngrok authtoken %NGROK_AUTH_TOKEN%
-call :log "Ngrok authenticated."
-
-REM Menjalankan ngrok untuk menghubungkan RDP ke public URL
-call :log "Starting ngrok tunnel for RDP..."
-start ngrok tcp 3389
-call :log "Ngrok tunnel started for RDP."
-
-REM Menjaga agar proses tetap berjalan
-call :log "Setup complete. Keeping the process running..."
-pause
-
-exit /b
+del /f "C:\Users\Public\Desktop\Epic Games Launcher.lnk" > out.txt 2>&1
+net config server /srvcomment:"Windows 11 Server by HenCoders" > out.txt 2>&1
+REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /V EnableAutoTray /T REG_DWORD /D 0 /F > out.txt 2>&1
+net user administrator W2016 /add >nul
+net localgroup administrators administrator /add >nul
+net user administrator /active:yes >nul
+net user installer /delete
+diskperf -Y >nul
+sc config Audiosrv start= auto >nul
+sc start audiosrv >nul
+ICACLS C:\Windows\Temp /grant administrator:F >nul
+ICACLS C:\Windows\Installer /grant administrator:F >nul
+echo Successfully Installed, If the RDP is Dead, Please Rebuild Again!
+echo IP:
+tasklist | find /i "ngrok.exe" >Nul && curl -s localhost:4040/api/tunnels | jq -r .tunnels[0].public_url || echo "Cannot get a tunnel, make sure ngrok_auth_token is correct in Settings> Secrets> Repository Secret. Maybe your previous VM is still running: https://dashboard.ngrok.com/status/tunnels"
+echo Username: administrator
+echo Password: W2016
+echo Please log in to your RDP!
+ping -n 10 127.0.0.1 >nul
