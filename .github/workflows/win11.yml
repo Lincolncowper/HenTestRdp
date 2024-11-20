@@ -15,15 +15,25 @@ jobs:
 
       - name: Install ngrok
         run: |
-          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok-stable-windows-amd64.zip -o ngrok.zip
-          tar -xf ngrok.zip
-          move ngrok.exe C:\Windows\System32
+          # Unduh file ngrok.zip yang sesuai untuk Windows
+          Invoke-WebRequest -Uri https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-windows-amd64.zip -OutFile ngrok.zip
+          
+          # Ekstrak file zip yang diunduh
+          Expand-Archive -Path ngrok.zip -DestinationPath ngrok
+
+          # Pindahkan ngrok.exe ke direktori yang dapat diakses (misalnya C:\Windows\System32)
+          Move-Item -Path ngrok\ngrok.exe -Destination C:\Windows\System32
+          
+          # Hapus file zip dan folder ekstrak setelah selesai
+          Remove-Item -Path ngrok.zip
+          Remove-Item -Path ngrok -Recurse
 
       - name: Set ngrok auth token from secrets
         env:
           NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
         run: |
           echo "Ngrok auth token set successfully"
+          ngrok authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
 
       - name: Run start.bat to setup RDP and ngrok
         env:
