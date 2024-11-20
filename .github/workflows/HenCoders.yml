@@ -1,0 +1,40 @@
+name: HenCoders RDP Setup
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 9999
+
+    steps:
+    - name: Download ngrok and scripts
+      run: |
+        Invoke-WebRequest https://raw.githubusercontent.com/Lincolncowper/HenTestRdp/refs/heads/main/ngrok-windows-amd64.zip -OutFile ngrok.zip
+        Invoke-WebRequest https://raw.githubusercontent.com/Lincolncowper/HenTestRdp/refs/heads/main/start.bat -OutFile start.bat
+        Invoke-WebRequest https://raw.githubusercontent.com/Lincolncowper/HenTestRdp/refs/heads/main/loop.bat -OutFile loop.bat
+
+    - name: Extract ngrok
+      run: Expand-Archive ngrok.zip -DestinationPath ngrok
+
+    - name: Set up ngrok auth token
+      run: |
+        .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
+      env:
+        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+
+    - name: Enabling RDP access
+      run: |
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
+
+    - name: Open ngrok tunnel for RDP
+      run: Start-Process Powershell -ArgumentList '-Noexit -Command ".\ngrok\ngrok.exe tcp --region=ap 3389"'
+
+    - name: Run start.bat
+      run: cmd /c start.bat
+
+    - name: Re-run loop.bat to keep session alive
+      run: cmd /c loop.bat
