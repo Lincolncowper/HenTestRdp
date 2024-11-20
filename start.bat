@@ -13,9 +13,9 @@ Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' 
 Enable-NetFirewallRule -DisplayGroup "Remote Desktop" >nul 2>&1
 Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1 >nul 2>&1
 
-:: Eksekusi ngrok untuk membuka tunnel
+:: Menjalankan ngrok langsung
 echo Opening ngrok tunnel...
-start "" .\ngrok\ngrok.exe tcp --region=ap 3389
+call .\ngrok.exe tcp 3389 --region=ap
 
 :: Output informasi login RDP
 echo ===================================
