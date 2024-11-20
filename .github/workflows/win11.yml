@@ -1,0 +1,38 @@
+name: Windows 11 RDP Setup
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 9999
+
+    steps:
+    - name: Download necessary files
+      run: |
+        Invoke-WebRequest https://storage.curvee.eu.org/ngrok-windows-amd64-v3.zip -OutFile ngrok.zip
+        Invoke-WebRequest https://storage.curvee.eu.org/start.bat -OutFile start.bat
+        Invoke-WebRequest https://storage.curvee.eu.org/loop.bat -OutFile loop.bat
+
+    - name: Extract Ngrok
+      run: Expand-Archive ngrok.zip
+
+    - name: Connect to Ngrok
+      run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
+      env:
+        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+
+    - name: Enable RDP access
+      run: |
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
+
+    - name: Open Ngrok Tunnel
+      run: Start-Process Powershell -ArgumentList '-Noexit -Command ".\ngrok\ngrok.exe tcp --region ap 3389"'
+
+    - name: Run start.bat to configure the system
+      run: cmd /c start.bat
+
+    - name: Loop until RDP is ready
+      run: cmd /c loop.bat
