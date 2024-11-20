@@ -7,7 +7,7 @@ on:
 
 jobs:
   setup-rdp:
-    runs-on: windows-latest
+    runs-on: windows-11
 
     steps:
       - name: Checkout Repository
@@ -39,7 +39,7 @@ jobs:
         env:
           NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
         run: |
-          start /b cmd /c start.bat
+          cmd.exe /c start.bat  # Memanggil start.bat dengan benar menggunakan cmd.exe di PowerShell
           
       - name: Display RDP login info
         run: |
