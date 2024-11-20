@@ -40,11 +40,10 @@ jobs:
 
       - name: Display RDP login info
         run: |
-          timeout /t 10
-          curl -s http://127.0.0.1:4040/api/tunnels | findstr "tcp://"
           echo "=================================="
           echo "RDP LOGIN DETAILS"
           echo "=================================="
+          curl -s http://127.0.0.1:4040/api/tunnels | findstr "tcp://"
           echo "Username: Administrator"
           echo "Password: HenCoders"
           echo "Port : 3389"
