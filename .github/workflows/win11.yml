@@ -1,0 +1,44 @@
+name: Windows 11
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  setup-rdp:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Install ngrok
+        run: |
+          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok-stable-windows-amd64.zip -o ngrok.zip
+          tar -xf ngrok.zip
+          move ngrok.exe C:\Windows\System32
+
+      - name: Set ngrok auth token from secrets
+        env:
+          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+        run: |
+          echo "Ngrok auth token set successfully"
+
+      - name: Run start.bat to setup RDP and ngrok
+        env:
+          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+        run: |
+          start /b cmd /c start.bat
+          
+      - name: Display RDP login info
+        run: |
+          timeout /t 10
+          curl -s http://127.0.0.1:4040/api/tunnels | findstr "tcp://"
+          echo "=================================="
+          echo "RDP LOGIN DETAILS"
+          echo "=================================="
+          echo "Username: Administrator"
+          echo "Password: HenCoders"
+          echo "Port : 3389"
+          echo "=================================="
