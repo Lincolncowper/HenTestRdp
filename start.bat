@@ -15,7 +15,7 @@ Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\W
 
 :: Mengunduh ngrok dan membuka tunnel
 echo Opening ngrok tunnel...
-Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\ngrok\ngrok.exe tcp --region=ap 3389" 
+start "" powershell -Command ".\ngrok\ngrok.exe tcp --region=ap 3389"
 
 :: Output informasi login RDP
 echo ===================================
