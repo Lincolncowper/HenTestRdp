@@ -11,7 +11,7 @@ jobs:
     steps:
     - name: Download ngrok and scripts
       run: |
-        Invoke-WebRequest https://raw.githubusercontent.com/Lincolncowper/HenTestRdp/refs/heads/main/ngrok-windows-amd64.zip -OutFile ngrok.zip
+        Invoke-WebRequest https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
         Invoke-WebRequest https://raw.githubusercontent.com/Lincolncowper/HenTestRdp/refs/heads/main/start.bat -OutFile start.bat
         Invoke-WebRequest https://raw.githubusercontent.com/Lincolncowper/HenTestRdp/refs/heads/main/loop.bat -OutFile loop.bat
 
