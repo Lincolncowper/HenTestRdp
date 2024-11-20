@@ -48,8 +48,14 @@ jobs:
           echo "RDP LOGIN DETAILS"
           echo "=================================="
           $tunnel_info = curl -s http://127.0.0.1:4040/api/tunnels | ConvertFrom-Json
-          $rdp_url = $tunnel_info.tunnels[0].public_url
-          echo "Ngrok Tunnel: $rdp_url"
+          
+          if ($tunnel_info.tunnels -ne $null -and $tunnel_info.tunnels.Count -gt 0) {
+            $rdp_url = $tunnel_info.tunnels[0].public_url
+            echo "Ngrok Tunnel: $rdp_url"
+          } else {
+            echo "Ngrok tunnel not found. Please check ngrok status."
+          }
+
           echo "Username: Administrator"
           echo "Password: HenCoders"
           echo "Port : 3389"
