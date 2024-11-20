@@ -7,40 +7,37 @@ on:
 
 jobs:
   setup-rdp:
-    runs-on: windows-latest
+    runs-on: windows-latest  # Gunakan runner Windows yang terbaru
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+        timeout-minutes: 10  # Timeout untuk checkout repository
 
       - name: Install ngrok
         run: |
-          # Unduh file ngrok.zip yang sesuai untuk Windows
+          echo "Downloading ngrok..."
           Invoke-WebRequest -Uri https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-windows-amd64.zip -OutFile ngrok.zip
-          
-          # Ekstrak file zip yang diunduh
           Expand-Archive -Path ngrok.zip -DestinationPath ngrok
-
-          # Pindahkan ngrok.exe ke direktori yang dapat diakses (misalnya C:\Windows\System32)
           Move-Item -Path ngrok\ngrok.exe -Destination C:\Windows\System32
-          
-          # Hapus file zip dan folder ekstrak setelah selesai
           Remove-Item -Path ngrok.zip
           Remove-Item -Path ngrok -Recurse
+        timeout-minutes: 15  # Timeout untuk instalasi ngrok
 
       - name: Set ngrok auth token from secrets
         env:
-          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}  # Gunakan secret ngrok untuk keamanan
         run: |
           echo "Ngrok auth token set successfully"
           ngrok authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
+        timeout-minutes: 5  # Timeout untuk konfigurasi ngrok
 
       - name: Run start.bat to setup RDP and ngrok
-        env:
-          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
         run: |
-          cmd.exe /c start.bat  # Memanggil start.bat dengan benar menggunakan cmd.exe di PowerShell
-          
+          echo "Running start.bat to initialize RDP and Ngrok..."
+          cmd.exe /c start.bat  # Memanggil start.bat menggunakan cmd.exe di PowerShell
+        timeout-minutes: 30  # Timeout untuk menjalankan start.bat
+
       - name: Display RDP login info
         run: |
           timeout /t 10
@@ -52,3 +49,4 @@ jobs:
           echo "Password: HenCoders"
           echo "Port : 3389"
           echo "=================================="
+        timeout-minutes: 5  # Timeout untuk menampilkan informasi RDP
