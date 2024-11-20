@@ -31,9 +31,22 @@ jobs:
           ngrok authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
         timeout-minutes: 5
 
+      - name: Verify start.bat exists and print directory
+        run: |
+          echo "Current directory:"
+          dir  # Menampilkan direktori kerja saat ini untuk memastikan start.bat berada di sana
+          echo "Checking if start.bat exists..."
+          if (Test-Path -Path '../start.bat') {
+            echo "start.bat exists."
+          } else {
+            echo "start.bat does not exist in the current directory."
+            exit 1  # Keluar jika start.bat tidak ditemukan
+          }
+        timeout-minutes: 5
+
       - name: Run start.bat to initialize RDP and ngrok
         run: |
-          cmd.exe /c start.bat
+          cmd.exe /c ../start.bat  # Menjalankan start.bat dari root directory
         timeout-minutes: 30
 
       - name: Wait for ngrok tunnel to start
