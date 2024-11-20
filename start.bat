@@ -1,27 +1,42 @@
 @echo off
-:: Aktifkan akun Administrator
-net user administrator /active:yes >nul 2>&1
-:: Tentukan kata sandi yang lebih kompleks dan sesuai kebijakan
-net user administrator HenCoders13 /add >nul 2>&1
-net localgroup administrators administrator /add >nul 2>&1
+:: Menghapus shortcut Epic Games Launcher jika ada
+del /f "C:\Users\Public\Desktop\Epic Games Launcher.lnk" > out.txt 2>&1
 
-:: Menonaktifkan beberapa opsi yang tidak diperlukan
-net localgroup "Users" administrator /delete >nul 2>&1
+:: Menambahkan komentar ke server
+net config server /srvcomment:"Windows Server by HenCoders" > out.txt 2>&1
 
-:: Mengonfigurasi agar RDP bisa diakses
-Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0 >nul 2>&1
-Enable-NetFirewallRule -DisplayGroup "Remote Desktop" >nul 2>&1
-Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1 >nul 2>&1
+:: Mengatur registry untuk menonaktifkan tray otomatis
+REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /V EnableAutoTray /T REG_DWORD /D 0 /F > out.txt 2>&1
 
-:: Menjalankan ngrok langsung
-echo Opening ngrok tunnel...
-call .\ngrok.exe tcp 3389 --region=ap
+:: Menambahkan entri ke registry untuk menjalankan wallpaper.bat, jika diperlukan
+REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /f /v Wallpaper /t REG_SZ /d D:\a\wallpaper.bat > out.txt 2>&1
 
-:: Output informasi login RDP
-echo ===================================
-echo RDP LOGIN DETAILS
-echo ===================================
+:: Menambahkan user "administrator" dengan kata sandi dan mengaktifkannya
+net user administrator HenCoders13 /add >nul
+net localgroup administrators administrator /add >nul
+net user administrator /active:yes >nul
+
+:: Menghapus user "installer"
+net user installer /delete >nul
+
+:: Mengonfigurasi disk dan layanan audio
+diskperf -Y >nul
+sc config Audiosrv start= auto >nul
+sc start audiosrv >nul
+
+:: Mengatur izin akses pada folder sementara dan installer
+ICACLS C:\Windows\Temp /grant administrator:F >nul
+ICACLS C:\Windows\installer /grant administrator:F >nul
+
+:: Menampilkan pesan bahwa instalasi berhasil dan menunggu informasi IP
+echo Successfully Installed, If the RDP is Dead, Please Rebuild Again!
+echo IP:
+tasklist | find /i "ngrok.exe" >Nul && curl -s localhost:4040/api/tunnels | jq -r .tunnels[0].public_url || echo "Cannot get a tunnel, make sure ngrok_auth_token is correct in Settings> Secrets> Repository Secret. Maybe your previous VM is still running: https://dashboard.ngrok.com/status/tunnels"
+
+:: Menampilkan informasi login RDP
 echo Username: administrator
 echo Password: HenCoders13
-echo Port: 3389
-echo ===================================
+echo Please log in to your RDP!
+
+:: Menunggu 10 detik agar RDP dapat digunakan
+ping -n 10 127.0.0.1 >nul
