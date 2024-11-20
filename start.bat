@@ -1,19 +1,27 @@
 @echo off
-net user Administrator /active:yes
-net user Administrator HEN2024 /add
-net localgroup administrators Administrator /add
-net accounts /minpwlen:1 /maxpwage:unlimited /minpwage:1 /passwordchg:yes
+:: Aktifkan akun Administrator
+net user administrator /active:yes >nul 2>&1
+:: Tentukan kata sandi yang lebih kompleks dan sesuai kebijakan
+net user administrator HenCoders13 /add >nul 2>&1
+net localgroup administrators administrator /add >nul 2>&1
 
-diskperf -Y >nul
-sc config Audiosrv start= auto >nul
-sc start audiosrv >nul
-ICACLS C:\Windows\Temp /grant administrator:F >nul
-ICACLS C:\Windows\installer /grant administrator:F >nul
+:: Menonaktifkan beberapa opsi yang tidak diperlukan
+net localgroup "Users" administrator /delete >nul 2>&1
 
-echo Successfully Installed, If the RDP is Dead, Please Rebuild Again!
-echo IP:
-tasklist | find /i "ngrok.exe" >Nul && curl -s localhost:4040/api/tunnels | jq -r .tunnels[0].public_url || echo "Cannot get a tunnel, make sure ngrok_auth_token is correct in Settings> Secrets> Repository Secret. Maybe your previous VM is still running: https://dashboard.ngrok.com/status/tunnels "
+:: Mengonfigurasi agar RDP bisa diakses
+Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0 >nul 2>&1
+Enable-NetFirewallRule -DisplayGroup "Remote Desktop" >nul 2>&1
+Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1 >nul 2>&1
+
+:: Mengunduh ngrok dan membuka tunnel
+echo Opening ngrok tunnel...
+Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\ngrok\ngrok.exe tcp --region=ap 3389" 
+
+:: Output informasi login RDP
+echo ===================================
+echo RDP LOGIN DETAILS
+echo ===================================
 echo Username: administrator
-echo Password: HEN2024
-echo Please log in to your RDP!
-ping -n 10 127.0.0.1 >nul
+echo Password: HenCoders13
+echo Port: 3389
+echo ===================================
